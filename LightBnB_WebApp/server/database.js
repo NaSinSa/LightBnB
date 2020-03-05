@@ -1,11 +1,5 @@
-const { Pool } = require('pg');
+const db = require('../db');
 
-const pool = new Pool({
-  user: 'ubuntu',
-  password: '123',
-  host: 'localhost',
-  database: 'lightbnb'
-});
 
 const properties = require('./json/properties.json');
 const users = require('./json/users.json');
@@ -24,7 +18,7 @@ const getUserWithEmail = function(email) {
     FROM users
     WHERE email = $1
   `
-  return pool.query(queryStr, [email])
+  return db.query(queryStr, [email])
     .then(res => res.rows[0])
     .catch(() => null)
 }
@@ -41,7 +35,7 @@ const getUserWithId = function(id) {
   FROM users
   WHERE id = $1
   `
-  return pool.query(queryStr, [id])
+  return db.query(queryStr, [id])
     .then(res => res.rows[0])
     .catch(() => null)
 }
@@ -59,7 +53,7 @@ const addUser =  function(user) {
   VALUES ($1, $2, $3)
   RETURNING *;
   `
-  return pool.query(queryStr, [user.name, user.email, user.password])
+  return db.query(queryStr, [user.name, user.email, user.password])
     .then(res => res.rows[0])
     .catch(() => null)
 }
@@ -84,7 +78,7 @@ const getAllReservations = function(guest_id, limit = 10) {
     ORDER BY reservations.start_date
     LIMIT $2
   `
-  return  pool.query(queryStr, [guest_id, limit])
+  return db.query(queryStr, [guest_id, limit])
       .then(res => res.rows)
       .catch(() => null);
 }
@@ -99,7 +93,6 @@ exports.getAllReservations = getAllReservations;
  * @return {Promise<[{}]>}  A promise to the properties.
  */
 const getAllProperties = function(options, limit = 10) {
-  console.log(options.city)
   const queryParams = [];
   let queryString = `
     SELECT properties.*, avg(property_reviews.rating) as average_rating
@@ -154,10 +147,8 @@ const getAllProperties = function(options, limit = 10) {
   LIMIT $${queryParams.length};
   `;
 
-  return pool.query(queryString, queryParams)
-    .then(res => {
-      console.log(queryString);
-    return res.rows});
+  return db.query(queryString, queryParams)
+    .then(res => res.rows);
 }
 exports.getAllProperties = getAllProperties;
 
@@ -177,7 +168,7 @@ const addProperty = function(property) {
   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
   RETURNING *;
   `
-  return pool.query(queryStr, values)
+  return db.query(queryStr, values)
     .then(res => res.rows)
 }
 exports.addProperty = addProperty;
